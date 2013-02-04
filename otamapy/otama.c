@@ -21,23 +21,37 @@ typedef struct {
 static void
 pyobj2variant(PyObject *object, otama_variant_t *var)
 {
-    printf("%d\n", PyType_Check(object));
-    //switch (PyType_Check(object)) {
-    //    case 0: // FIXME
-    //        otama_variant_set_null(var);
-    //        printf("hoge\n");
-    //        break;
-    //    case PyBool_Type:
-    //        if (PyBool_Check(object)) {
-	//	        otama_variant_set_int(var, 1);
-    //        }
-    //        else {
-	//	        otama_variant_set_int(var, 0);
-    //        }
-    //    default:
-    //        printf("other\n");
-    //        break;
-    //}
+    if (PyBool_Check(object)) {
+        if (Py_True == object) {
+            printf("true\n");
+	        otama_variant_set_int(var, 1);
+        }
+        else {
+            printf("false\n");
+	        otama_variant_set_int(var, 0);
+        }
+    }
+    else if (Py_None == object) {
+        printf("None\n");
+        otama_variant_set_null(var);
+    }
+    else if (PyInt_Check(object)) {
+        printf("int\n");
+    }
+    else if (PyString_Check(object)) {
+        printf("string\n");
+        otama_variant_set_string(var, PyString_AsString(object));
+    }
+    else if (PyTuple_Check(object)) {
+        printf("tuple\n");
+    }
+    else if (PyDict_Check(object)) {
+        printf("dict\n");
+        otama_variant_set_hash(var);
+    }
+    else {
+        printf("not support\n");
+    }
 }
 
 static void
