@@ -64,22 +64,29 @@ Otama_dealloc(OtamaObject *self)
 static PyObject *
 OtamaObject_new(PyTypeObject *type, PyObject *args)
 {
+    PyObject *config = NULL;
     OtamaObject *self;
     otama_t *otama = NULL;
-    otama_status_t ret = OTAMA_STATUS_OK;
+
+    if (!PyArg_ParseTuple(args, "|O", &config)) {
+        return NULL;
+    }
 
     self = (OtamaObject *)type->tp_alloc(type, 0);
     if (self) {
         Py_INCREF(Py_None);
         self->config = Py_None;
 
-        otama_variant_t *var;
-	    otama_variant_pool_t *pool;
+        if (config) {
+            otama_variant_t *var;
+            otama_variant_pool_t *pool;
+            otama_status_t ret = OTAMA_STATUS_OK;
 
-		pool = otama_variant_pool_alloc();
-        var = otama_variant_new(pool);
-        pyobj2variant(args, var);
-        ret = otama_open_opt(&otama, var);
+            pool = otama_variant_pool_alloc();
+            var = otama_variant_new(pool);
+            pyobj2variant(config, var);
+            ret = otama_open_opt(&otama, var);
+        }
     }
 
     return (PyObject *)self;
@@ -100,7 +107,7 @@ OtamaObject_open(OtamaObject *self, PyObject *args)
 {
     PyObject *config = NULL;
 
-    if (!PyArg_ParseTuple(args, "O", &config))
+    if (!PyArg_ParseTuple(args, "|O", &config))
         return NULL;
 
     if (config) {
@@ -108,6 +115,16 @@ OtamaObject_open(OtamaObject *self, PyObject *args)
             PyErr_SetString(PyExc_TypeError, "context arg is dict.");
             return NULL;
         }
+
+        otama_t *otama = NULL;
+        otama_variant_t *var;
+        otama_variant_pool_t *pool;
+        otama_status_t ret = OTAMA_STATUS_OK;
+
+        pool = otama_variant_pool_alloc();
+        var = otama_variant_new(pool);
+        pyobj2variant(config, var);
+        ret = otama_open_opt(&otama, var);
     }
 
     return Py_None;

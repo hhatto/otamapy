@@ -7,4 +7,4 @@ config = {'namespace': 'testnamespace',
 o = Otama()
 print o
 o.open(config)
-idb = Otama.open(config)
+#idb = Otama.open(config)
