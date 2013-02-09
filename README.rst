@@ -21,13 +21,46 @@ from easy_install::
 
 Requirements
 ------------
-* Python2.6+
+* Python2.7+
 
 
 Usage
 -----
 
+config file (example.conf)
+
+.. code-block:: text
+
+    {
+        'namespace': 'testnamespace',
+        'driver': {'name': 'color', 'data_dir': './data', 'color_weight': 0.2},
+        'database': {'driver': 'sqlite3', 'name': './data/store.sqlite3'}
+    }
+
+store to database, and search from database.
+
 .. code-block:: python
 
+    # store_and_search.py
     from otama import Otama
-    Otama.open(config)
+    db = Otama.open('example.conf')
+
+    kvs = {}
+    db.create_table()
+    for filename in ('foo.jpg', 'bar.jpg'):
+        kvs[db.insert(filename)] = filename
+
+    for result in db.search(10, 'foo.jpg')
+        key = result['id']
+        print("sim=%.3f, file=%s" % (result['similarity'], kvs[key]))
+
+.. code-block::
+
+    $ python store_and_search.py
+    sim=1.000, file=foo.jpg
+    sim=0.969, file=bar.jpg
+
+see examples_ .
+
+.. _examples: https://github.com/hhatto/otamapy/tree/master/examples
+
