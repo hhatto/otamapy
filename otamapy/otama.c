@@ -6,8 +6,15 @@
 #include "structmember.h"
 #include "otama.h"
 
-#define MAX_BUFSIZE (1024 * 1024)
-#define TMP_BUFFER_SIZE (1024 * 8)
+#if PY_MAJOR_VERSION >= 3
+#define PY3
+#define PyString_Check PyUnicode_Check
+#define PyString_FromString PyUnicode_FromString
+#define PyString_AsString PyUnicode_AS_DATA
+#endif
+#ifndef Py_TYPE
+    #define Py_TYPE(ob) (((PyObject*)(ob))->ob_type)
+#endif
 
 static PyObject *PyExc_OtamaError;
 
@@ -74,7 +81,7 @@ pyobj2variant(PyObject *object, otama_variant_t *var)
     else if (Py_None == object) {
         otama_variant_set_null(var);
     }
-    else if (PyInt_Check(object)) {
+    else if (PyLong_Check(object)) {
         printf("int\n");
     }
     else if (PyString_Check(object)) {
@@ -88,7 +95,7 @@ pyobj2variant(PyObject *object, otama_variant_t *var)
         otama_variant_set_hash(var);
     }
     else {
-        printf("not support\n");
+        printf("%s not support\n", __FUNCTION__);
     }
 }
 
@@ -139,7 +146,8 @@ otamapy_raise(otama_status_t ret)
 static void
 Otama_dealloc(OtamaObject *self)
 {
-    self->ob_type->tp_free((PyObject*)self);
+    //self->ob_type->tp_free((PyObject*)self);
+    Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
 static PyObject *
@@ -172,7 +180,7 @@ OtamaObject_new(PyTypeObject *type, PyObject *args)
                 otama_variant_pool_free(&pool);
             }
             else {
-                PyErr_SetString(PyExc_TypeError, "context arg is dict.");
+                PyErr_SetString(PyExc_TypeError, "not support type.");
                 return NULL;
             }
         }
@@ -284,7 +292,7 @@ OtamaObject_search(OtamaObject *self, PyObject *args)
     pyobj2variant(data, var);
 
     if (PyString_Check(data)) {
-        char *_tmp = PyString_AsString(data);
+        const char *_tmp = PyString_AsString(data);
         ret = otama_search_file(self->otama, &results, num, _tmp);
     }
     else {
@@ -325,11 +333,11 @@ OtamaObject_insert(OtamaObject *self, PyObject *args)
 	pyobj2variant(data, var);
 
     if (PyString_Check(data)) {
-        char *_tmp = PyString_AsString(data);
+        const char *_tmp = PyString_AsString(data);
         ret = otama_insert_file(self->otama, &id, _tmp);
     }
     else {
-        PyErr_SetString(PyExc_TypeError, "not support");
+        PyErr_SetString(PyExc_TypeError, "not support type");
         return NULL;
     }
 
@@ -364,8 +372,12 @@ static PyMethodDef OtamaObject_methods[] = {
 
 
 static PyTypeObject OtamaObjectType = {
+#ifdef PY3
+    PyVarObject_HEAD_INIT(NULL, 0)
+#else
     PyObject_HEAD_INIT(NULL)
     0,                                          /* ob_size */
+#endif
     "otama.Otama",                              /* tp_name */
     sizeof(OtamaObject),                        /* tp_basicsize */
     0,
@@ -401,7 +413,7 @@ static PyTypeObject OtamaObjectType = {
     0,
     0,
     (initproc)OtamaObject_init,                 /* tp_init */
-    0,
+    0,                                          /* tp_alloc */
     (newfunc)OtamaObject_new,                   /* tp_new */
 };
 
@@ -413,24 +425,49 @@ static PyMethodDef OtamaMethods[] = {
 static char OtamaDoc[] = "otama Python Interface.\n";
 
 
+#ifdef PY3
+static struct PyModuleDef OtamaModuleDef = {
+    PyModuleDef_HEAD_INIT,
+    "otamapy",
+    OtamaDoc,
+    -1,
+    OtamaMethods,
+};
+PyObject *
+PyInit_otama(void)
+
+#else
 
 PyMODINIT_FUNC
 initotama(void)
+#endif
 {
-    PyObject *m;
+    PyObject *module;
+
+#ifdef PY3
+    module = PyModule_Create(&OtamaModuleDef);
+#else
+    module = Py_InitModule3("otama", OtamaMethods, OtamaDoc);
+    if (!module)
+        return;
+#endif
 
     if (PyType_Ready(&OtamaObjectType) < 0)
+#ifdef PY3
+        return NULL;
+#else
         return;
-
-    m = Py_InitModule3("otama", OtamaMethods, OtamaDoc);
-    if (!m)
-        return;
+#endif
 
     PyExc_OtamaError = PyErr_NewException("otama.error", NULL, NULL);
 
     Py_INCREF(&OtamaObjectType);
-    PyModule_AddObject(m, "Otama", (PyObject *)&OtamaObjectType);
+    PyModule_AddObject(module, "Otama", (PyObject *)&OtamaObjectType);
 
     Py_INCREF(PyExc_OtamaError);
-    PyModule_AddObject(m, "error", (PyObject *)&OtamaObjectType);
+    PyModule_AddObject(module, "error", (PyObject *)&OtamaObjectType);
+
+#ifdef PY3
+    return module;
+#endif
 }
