@@ -252,6 +252,7 @@ OtamaObject_pull(OtamaObject *self)
     ret = otama_pull(self->otama);
     if (ret != OTAMA_STATUS_OK) {
         otamapy_raise(ret);
+        return NULL;
     }
 
     Py_RETURN_NONE;
@@ -263,6 +264,19 @@ OtamaObject_create_table(OtamaObject *self)
     otama_status_t ret;
 
     ret = otama_create_table(self->otama);
+    if (ret != OTAMA_STATUS_OK) {
+        otamapy_raise(ret);
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+static PyObject *
+OtamaObject_drop_table(OtamaObject *self)
+{
+    otama_status_t ret;
+
+    ret = otama_drop_table(self->otama);
     if (ret != OTAMA_STATUS_OK) {
         otamapy_raise(ret);
         return NULL;
@@ -303,6 +317,7 @@ OtamaObject_search(OtamaObject *self, PyObject *args)
     if (ret != OTAMA_STATUS_OK) {
         otama_variant_pool_free(&pool);
         otamapy_raise(ret);
+        return NULL;
     }
     result_tuple = make_results(results);
 
@@ -358,23 +373,25 @@ static PyObject *
 OtamaObject_remove(OtamaObject *self, PyObject *args)
 {
     PyObject *id;
-	otama_status_t ret;
-	otama_id_t remove_id;
+    otama_status_t ret;
+    otama_id_t remove_id;
 
     if (!PyArg_ParseTuple(args, "O", &id)) {
         PyErr_SetString(PyExc_TypeError, "argument error");
         return NULL;
     }
 
-	ret = otama_id_hexstr2bin(&remove_id, PyString_AsString(id));
-	if (ret != OTAMA_STATUS_OK) {
-		otamapy_raise(ret);
-	}
+    ret = otama_id_hexstr2bin(&remove_id, PyString_AsString(id));
+    if (ret != OTAMA_STATUS_OK) {
+        otamapy_raise(ret);
+        return NULL;
+    }
 
-	ret = otama_remove(self->otama, &remove_id);
-	if (ret != OTAMA_STATUS_OK) {
-		otamapy_raise(ret);
-	}
+    ret = otama_remove(self->otama, &remove_id);
+    if (ret != OTAMA_STATUS_OK) {
+        otamapy_raise(ret);
+        return NULL;
+    }
 
     Py_RETURN_NONE;
 }
@@ -388,6 +405,8 @@ static PyMethodDef OtamaObject_methods[] = {
      "pull to Otama DataBase"},
     {"create_table", (PyCFunction)OtamaObject_create_table, METH_NOARGS,
      "create Otama DataBase Table"},
+    {"drop_table", (PyCFunction)OtamaObject_drop_table, METH_NOARGS,
+     "drop to Otama DataBase Table"},
     {"insert", (PyCFunction)OtamaObject_insert, METH_VARARGS,
      "insert image data"},
     {"remove", (PyCFunction)OtamaObject_remove, METH_VARARGS,
