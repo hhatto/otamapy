@@ -54,7 +54,7 @@ store to database, and search from database.
         key = result['id']
         print("sim=%.3f, file=%s" % (result['similarity'], kvs[key]))
 
-.. code-block::
+.. code-block:: sh
 
     $ python store_and_search.py
     sim=1.000, file=foo.jpg
@@ -63,4 +63,12 @@ store to database, and search from database.
 see examples_ .
 
 .. _examples: https://github.com/hhatto/otamapy/tree/master/examples
+
+Links
+-----
+* PyPI_
+* GitHub_
+
+.. _PyPI: http://pypi.python.org/pypi/otamapy/
+.. _GitHub: https://github.com/hhatto/otamapy
 
