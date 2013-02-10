@@ -11,6 +11,9 @@
 #define PyString_Check PyUnicode_Check
 #define PyString_FromString PyUnicode_FromString
 #define PyString_AsString PyUnicode_AS_DATA
+#define OTAMAPY_INIT_ERROR return NULL
+#else
+#define OTAMAPY_INIT_ERROR return
 #endif
 #ifndef Py_TYPE
     #define Py_TYPE(ob) (((PyObject*)(ob))->ob_type)
@@ -22,6 +25,7 @@ static PyObject *PyExc_OtamaError;
 /* Otama Object */
 typedef struct {
     PyObject_HEAD
+    PyObject *version_string;
     otama_t *otama;
 } OtamaObject;
 
@@ -195,10 +199,6 @@ OtamaObject_init(OtamaObject *self, PyObject *args)
     return 0;
 }
 
-static PyMemberDef OtamaObject_members[] = {
-    {NULL}
-};
-
 static PyObject *
 OtamaObject_open(OtamaObject *self, PyObject *args)
 {
@@ -354,6 +354,31 @@ OtamaObject_insert(OtamaObject *self, PyObject *args)
     return pyobj_id;
 }
 
+static PyObject *
+OtamaObject_remove(OtamaObject *self, PyObject *args)
+{
+    PyObject *id;
+	otama_status_t ret;
+	otama_id_t remove_id;
+
+    if (!PyArg_ParseTuple(args, "O", &id)) {
+        PyErr_SetString(PyExc_TypeError, "argument error");
+        return NULL;
+    }
+
+	ret = otama_id_hexstr2bin(&remove_id, PyString_AsString(id));
+	if (ret != OTAMA_STATUS_OK) {
+		otamapy_raise(ret);
+	}
+
+	ret = otama_remove(self->otama, &remove_id);
+	if (ret != OTAMA_STATUS_OK) {
+		otamapy_raise(ret);
+	}
+
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef OtamaObject_methods[] = {
     {"open", (PyCFunction)OtamaObject_open, METH_VARARGS | METH_CLASS,
      "open Otama"},
@@ -365,9 +390,15 @@ static PyMethodDef OtamaObject_methods[] = {
      "create Otama DataBase Table"},
     {"insert", (PyCFunction)OtamaObject_insert, METH_VARARGS,
      "insert image data"},
+    {"remove", (PyCFunction)OtamaObject_remove, METH_VARARGS,
+     "remove id from Otama DataBase"},
     {"search", (PyCFunction)OtamaObject_search, METH_VARARGS,
      "search from Otama DataBase"},
     {NULL, NULL, 0, NULL}
+};
+
+static PyMemberDef OtamaObject_members[] = {
+    {NULL}
 };
 
 
@@ -452,12 +483,13 @@ initotama(void)
         return;
 #endif
 
+    if (PyModule_AddStringConstant(module,
+                                   "__libotama_version__",
+                                   otama_version_string()) < 0)
+        OTAMAPY_INIT_ERROR;
+
     if (PyType_Ready(&OtamaObjectType) < 0)
-#ifdef PY3
-        return NULL;
-#else
-        return;
-#endif
+        OTAMAPY_INIT_ERROR;
 
     PyExc_OtamaError = PyErr_NewException("otama.error", NULL, NULL);
 
