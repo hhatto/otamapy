@@ -25,7 +25,6 @@ static PyObject *PyExc_OtamaError;
 /* Otama Object */
 typedef struct {
     PyObject_HEAD
-    PyObject *version_string;
     otama_t *otama;
 } OtamaObject;
 
@@ -45,8 +44,9 @@ variant2pyobj(otama_variant_t *var)
             int i;
             PyObject *tuple = PyTuple_New(count);
             for (i = 0; i < count; ++i) {
-                PyTuple_SetItem(tuple, i,
-                        variant2pyobj(otama_variant_array_at(var, i)));
+                PyObject *_value = variant2pyobj(otama_variant_array_at(var, i));
+                PyTuple_SetItem(tuple, i,_value);
+                Py_DECREF(_value);
             }
             return tuple;
         }
@@ -56,9 +56,11 @@ variant2pyobj(otama_variant_t *var)
 		    int i;
             PyObject *dict = PyDict_New();
             for (i = 0; i < count; ++i) {
+                PyObject *_value = variant2pyobj(otama_variant_hash_at2(var, otama_variant_array_at(keys, i)));
                 PyDict_SetItemString(dict,
                         otama_variant_to_string(otama_variant_array_at(keys, i)),
-                        variant2pyobj(otama_variant_hash_at2(var, otama_variant_array_at(keys, i))));
+                        _value);
+                Py_DECREF(_value);
             }
             return dict;
         }
@@ -116,13 +118,14 @@ make_results(const otama_result_t *results)
         char hexid[OTAMA_ID_HEXSTR_LEN];
 
 		otama_id_bin2hexstr(hexid, otama_result_id(results, i));
-        //PyObject *_result = PyDict_New();
-        PyObject *_result = variant2pyobj(value);
-        PyDict_SetItemString(_result, "id", PyString_FromString(hexid));
-        //PyDict_SetItemString(_result, "value", variant2pyobj(value));
+        PyObject *_result = variant2pyobj(value);   // return new dict
+        PyObject *_hexid = PyString_FromString(hexid);
+        PyDict_SetItemString(_result, "id", _hexid);
         // TODO: error handle
 
         PyTuple_SetItem(result_tuple, i, _result);
+
+        Py_XDECREF(_hexid);
     }
 
     return result_tuple;
@@ -150,7 +153,10 @@ otamapy_raise(otama_status_t ret)
 static void
 Otama_dealloc(OtamaObject *self)
 {
-    //self->ob_type->tp_free((PyObject*)self);
+    if (self->otama) {
+        otama_close(&(self->otama));
+        self->otama = NULL;
+    }
     Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
