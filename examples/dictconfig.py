@@ -6,8 +6,8 @@ from otama import Otama
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DATA_DIR = os.path.join(BASE_DIR, 'data')
-CONFIG_FILE = os.path.join(BASE_DIR, 'test.conf')
 IMAGE_DIR = os.path.join(BASE_DIR, 'image')
+TARGET_FILE = os.path.join(BASE_DIR, 'image/lena.jpg')
 config = {'namespace': 'testnamespace',
           'driver': {'name': 'color', 'data_dir': './data', 'color_weight': 0.2},
           'database': {'driver': 'sqlite3', 'name': './data/store.sqlite3'}
@@ -29,4 +29,5 @@ db.pull()
 with open(os.path.join(DATA_DIR, 'kvs.json'), 'w') as fp:
     json.dump(kvs, fp)
 
+print db.search(2, TARGET_FILE)
 db.close()

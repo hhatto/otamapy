@@ -54,7 +54,7 @@ store to database, and search from database.
         key = result['id']
         print("sim=%.3f, file=%s" % (result['similarity'], kvs[key]))
 
-.. code-block:: sh
+.. code-block:: text
 
     $ python store_and_search.py
     sim=1.000, file=foo.jpg

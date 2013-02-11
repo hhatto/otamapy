@@ -21,6 +21,7 @@
 
 static PyObject *PyExc_OtamaError;
 static PyTypeObject OtamaObjectType;
+static void pyobj2variant(PyObject *object, otama_variant_t *var);
 
 /* Otama Object */
 typedef struct {
@@ -74,6 +75,12 @@ variant2pyobj(otama_variant_t *var)
 }
 
 static void
+pyobj2variant_pair(PyObject *key, PyObject *value, otama_variant_t *var)
+{
+    pyobj2variant(value, otama_variant_hash_at(var, PyString_AsString(key)));
+}
+
+static void
 pyobj2variant(PyObject *object, otama_variant_t *var)
 {
     if (PyBool_Check(object)) {
@@ -87,8 +94,11 @@ pyobj2variant(PyObject *object, otama_variant_t *var)
     else if (Py_None == object) {
         otama_variant_set_null(var);
     }
+    else if (PyFloat_Check(object)) {
+        otama_variant_set_float(var, PyFloat_AsDouble(object));
+    }
     else if (PyLong_Check(object)) {
-        printf("int\n");
+        otama_variant_set_int(var, PyLong_AsLong(object));
     }
     else if (PyString_Check(object)) {
         otama_variant_set_string(var, PyString_AsString(object));
@@ -97,8 +107,17 @@ pyobj2variant(PyObject *object, otama_variant_t *var)
         printf("tuple\n");
     }
     else if (PyDict_Check(object)) {
-        printf("dict\n");
         otama_variant_set_hash(var);
+        PyObject *key, *value;
+        Py_ssize_t pos = 0;
+        while (PyDict_Next(object, &pos, &key, &value)) {
+            PyObject *_size = PyLong_FromSsize_t(pos);
+            long i = PyLong_AsLong(_size);
+            Py_XDECREF(_size);
+            if (i == -1) break;
+
+            pyobj2variant_pair(key, value, var);
+        }
     }
     else {
         printf("%s not support\n", __FUNCTION__);
@@ -242,7 +261,7 @@ OtamaObject_open(OtamaObject *self, PyObject *args)
             otama_variant_pool_free(&pool);
         }
         else {
-            PyErr_SetString(PyExc_TypeError, "context arg is dict.");
+            PyErr_SetString(PyExc_TypeError, "not support type.");
             return NULL;
         }
 
