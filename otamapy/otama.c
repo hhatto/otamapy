@@ -20,7 +20,7 @@
 #endif
 
 static PyObject *PyExc_OtamaError;
-
+static PyTypeObject OtamaObjectType;
 
 /* Otama Object */
 typedef struct {
@@ -165,6 +165,7 @@ OtamaObject_new(PyTypeObject *type, PyObject *args)
 {
     PyObject *config = NULL;
     OtamaObject *self;
+    otama_status_t ret = OTAMA_STATUS_OK;
 
     if (!PyArg_ParseTuple(args, "|O", &config)) {
         PyErr_SetString(PyExc_TypeError, "argument error");
@@ -175,7 +176,7 @@ OtamaObject_new(PyTypeObject *type, PyObject *args)
     if (self) {
         if (config) {
             if (PyString_Check(config)) {
-                otama_open(&self->otama, PyString_AsString(config));
+                ret = otama_open(&self->otama, PyString_AsString(config));
             }
             else if (PyDict_Check(config)) {
                 otama_variant_t *var;
@@ -191,6 +192,11 @@ OtamaObject_new(PyTypeObject *type, PyObject *args)
             }
             else {
                 PyErr_SetString(PyExc_TypeError, "not support type.");
+                return NULL;
+            }
+
+            if (ret != OTAMA_STATUS_OK) {
+                otamapy_raise(ret);
                 return NULL;
             }
         }
@@ -209,15 +215,20 @@ static PyObject *
 OtamaObject_open(OtamaObject *self, PyObject *args)
 {
     PyObject *config = NULL;
-    //otama_status_t ret = OTAMA_STATUS_OK;
+    otama_status_t ret = OTAMA_STATUS_OK;
 
-    if (!PyArg_ParseTuple(args, "|O", &config))
+    if (!PyArg_ParseTuple(args, "|O", &config)) {
         PyErr_SetString(PyExc_TypeError, "argument error");
         return NULL;
+    }
+
+    if (!self) {
+        self = (OtamaObject *)OtamaObject_new(&OtamaObjectType, args);
+    }
 
     if (config) {
         if (PyString_Check(config)) {
-            otama_open(&self->otama, PyString_AsString(config));
+            ret = otama_open(&self->otama, PyString_AsString(config));
         }
         else if (PyDict_Check(config)) {
             otama_variant_t *var;
@@ -234,9 +245,14 @@ OtamaObject_open(OtamaObject *self, PyObject *args)
             PyErr_SetString(PyExc_TypeError, "context arg is dict.");
             return NULL;
         }
+
+        if (ret != OTAMA_STATUS_OK) {
+            otamapy_raise(ret);
+            return NULL;
+        }
     }
 
-    Py_RETURN_NONE;
+    return (PyObject *)self;
 }
 
 static PyObject *
@@ -403,7 +419,7 @@ OtamaObject_remove(OtamaObject *self, PyObject *args)
 }
 
 static PyMethodDef OtamaObject_methods[] = {
-    {"open", (PyCFunction)OtamaObject_open, METH_VARARGS | METH_CLASS,
+    {"open", (PyCFunction)OtamaObject_open, METH_VARARGS|METH_STATIC,
      "open Otama"},
     {"close", (PyCFunction)OtamaObject_close, METH_NOARGS,
      "close Otama Object"},

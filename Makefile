@@ -2,6 +2,8 @@
 all:
 	python setup.py build
 
+.PHONY: test
+
 test:
 	make clean;
 	easy_install -ZU .

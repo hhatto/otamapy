@@ -16,7 +16,7 @@ config = {'namespace': 'testnamespace',
 if not os.path.exists(DATA_DIR):
     os.mkdir(DATA_DIR)
 
-db = Otama.open(CONFIG_FILE)
+db = Otama.open(config)
 db.create_table()
 files = glob(os.path.join(IMAGE_DIR, '*.jpg'))
 files += glob(os.path.join(IMAGE_DIR, '*.png'))
