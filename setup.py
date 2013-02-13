@@ -32,6 +32,6 @@ setup(name='otamapy',
           'Operating System :: POSIX :: Linux',
           'Programming Language :: C',
           'Programming Language :: Python'],
-      keywords="otama",
+      keywords="otama, CBIR",
       zip_safe=True,
       )
