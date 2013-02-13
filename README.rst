@@ -3,7 +3,7 @@ otamapy
 
 About
 -----
-otamapy is Python Interface for otama_ .
+otamapy is Python Interface for otama_ (otama is CBIR.).
 
 .. _otama: https://github.com/nagadomi/otama
 
