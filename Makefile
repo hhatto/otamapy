@@ -15,3 +15,4 @@ pypireg:
 
 clean:
 	rm -rf build dist *.egg-info temp setup.cfg
+	rm -f */*.pyc
