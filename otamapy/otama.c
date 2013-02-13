@@ -38,10 +38,10 @@ variant2pyobj(otama_variant_t *var)
             return PyLong_FromLong(otama_variant_to_int(var));
         case OTAMA_VARIANT_TYPE_FLOAT:
             return PyFloat_FromDouble(otama_variant_to_float(var));
-	    case OTAMA_VARIANT_TYPE_STRING:
+        case OTAMA_VARIANT_TYPE_STRING:
             return PyString_FromString(otama_variant_to_string(var));
-	    case OTAMA_VARIANT_TYPE_ARRAY: {
-		    long count = otama_variant_array_count(var);
+        case OTAMA_VARIANT_TYPE_ARRAY: {
+            long count = otama_variant_array_count(var);
             int i;
             PyObject *tuple = PyTuple_New(count);
             for (i = 0; i < count; ++i) {
