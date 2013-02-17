@@ -67,7 +67,7 @@ variant2pyobj(otama_variant_t *var)
         }
         case OTAMA_VARIANT_TYPE_NULL:
         default:
-            printf("not implementation");
+            printf("not implementation\n");
             break;
     }
 
@@ -104,7 +104,12 @@ pyobj2variant(PyObject *object, otama_variant_t *var)
         otama_variant_set_string(var, PyString_AsString(object));
     }
     else if (PyTuple_Check(object)) {
-        printf("tuple\n");
+        int len = PyTuple_Size(object), i;
+        otama_variant_set_array(var);
+        for (i = 0; i < len; ++i) {
+            PyObject *elm = PyTuple_GetItem(object, i);
+            pyobj2variant(elm, otama_variant_array_at(var, i));
+        }
     }
     else if (PyDict_Check(object)) {
         otama_variant_set_hash(var);
