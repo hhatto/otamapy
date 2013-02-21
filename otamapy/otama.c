@@ -21,6 +21,7 @@
 
 static PyObject *PyExc_OtamaError;
 static PyTypeObject OtamaObjectType;
+static PyTypeObject OtamaFeatureRawObjectType;
 static void pyobj2variant(PyObject *object, otama_variant_t *var);
 
 /* Otama Object */
@@ -28,6 +29,11 @@ typedef struct {
     PyObject_HEAD
     otama_t *otama;
 } OtamaObject;
+
+typedef struct {
+    OtamaObject base;
+    otama_feature_raw_t *raw;
+} OtamaFeatureRawObject;
 
 
 static PyObject *
@@ -130,7 +136,12 @@ pyobj2variant(PyObject *object, otama_variant_t *var)
         }
     }
     else {
-        printf("%s not support\n", __FUNCTION__);
+        if (PyObject_IsInstance(object, (PyObject *)&OtamaFeatureRawObjectType)) {
+            otama_variant_set_pointer(var, ((OtamaFeatureRawObject *)object)->raw);
+        }
+        else {
+            otama_variant_set_null(var);
+        }
     }
 }
 
@@ -497,7 +508,6 @@ OtamaObject_exists(OtamaObject *self, PyObject *args)
         return NULL;
     }
 
-
     ret = otama_id_hexstr2bin(&otama_id, PyString_AsString(id));
     if (ret != OTAMA_STATUS_OK) {
         otamapy_raise(ret);
@@ -511,6 +521,44 @@ OtamaObject_exists(OtamaObject *self, PyObject *args)
     }
 
     return result == 0 ? PyBool_FromLong(0) : PyBool_FromLong(1);
+}
+
+static PyObject *
+OtamaObject_feature_raw(OtamaObject *self, PyObject *args)
+{
+    otama_status_t ret;
+    otama_feature_raw_t *raw;
+    PyObject *pyraw, *query;
+    otama_variant_pool_t *pool;
+    otama_variant_t *var;
+
+    if (!PyArg_ParseTuple(args, "O", &query)) {
+        PyErr_SetString(PyExc_TypeError, "argument error");
+        return NULL;
+    }
+
+    if (!PyDict_Check(query)) {
+        PyErr_SetString(PyExc_TypeError, "invalid argument");
+        return NULL;
+    }
+
+    pool = otama_variant_pool_alloc();
+    var = otama_variant_new(pool);
+
+    pyobj2variant(query, var);
+
+    ret = otama_feature_raw(self->otama, &raw, var);
+    if (ret != OTAMA_STATUS_OK) {
+        otama_variant_pool_free(&pool);
+        otamapy_raise(ret);
+        return NULL;
+    }
+    otama_variant_pool_free(&pool);
+
+    pyraw = PyType_GenericNew(&OtamaFeatureRawObjectType, NULL, NULL);
+    ((OtamaFeatureRawObject *)pyraw)->raw = raw;
+
+    return pyraw;
 }
 
 static PyMethodDef OtamaObject_methods[] = {
@@ -534,6 +582,8 @@ static PyMethodDef OtamaObject_methods[] = {
      "check similarity"},
     {"exists", (PyCFunction)OtamaObject_exists, METH_VARARGS,
      "exist image in Otama DataBase"},
+    {"feature_raw", (PyCFunction)OtamaObject_feature_raw, METH_VARARGS,
+     "return feature raw value"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -588,6 +638,59 @@ static PyTypeObject OtamaObjectType = {
     (newfunc)OtamaObject_new,                   /* tp_new */
 };
 
+static PyMethodDef OtamaFeatureRawObject_methods[] = {
+    {NULL, NULL, 0, NULL}
+};
+
+static PyMemberDef OtamaFeatureRawObject_members[] = {
+    {NULL}
+};
+
+static PyTypeObject OtamaFeatureRawObjectType = {
+#ifdef PY3
+    PyVarObject_HEAD_INIT(NULL, 0)
+#else
+    PyObject_HEAD_INIT(NULL)
+    0,                                          /* ob_size */
+#endif
+    "otama.OtamaFeatureRaw",                    /* tp_name */
+    sizeof(OtamaFeatureRawObject),              /* tp_basicsize */
+    0,
+    (destructor)Otama_dealloc,                  /* tp_dealloc */
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,   /* tp_flags */
+    "OtamaFeatureRaw objects",                  /* tp_doc */
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    OtamaFeatureRawObject_methods,              /* tp_methods */
+    OtamaFeatureRawObject_members,              /* tp_members */
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    (initproc)OtamaObject_init,                 /* tp_init */
+    0,                                          /* tp_alloc */
+    (newfunc)OtamaObject_new,                   /* tp_new */
+};
 
 static PyMethodDef OtamaMethods[] = {
     {NULL, NULL, 0, NULL}
@@ -631,10 +734,16 @@ initotama(void)
     if (PyType_Ready(&OtamaObjectType) < 0)
         OTAMAPY_INIT_ERROR;
 
+    if (PyType_Ready(&OtamaFeatureRawObjectType) < 0)
+        OTAMAPY_INIT_ERROR;
+
     PyExc_OtamaError = PyErr_NewException("otama.OtamaError", NULL, NULL);
 
     Py_INCREF(&OtamaObjectType);
     PyModule_AddObject(module, "Otama", (PyObject *)&OtamaObjectType);
+
+    Py_INCREF(&OtamaFeatureRawObjectType);
+    PyModule_AddObject(module, "OtamaFeatureRaw", (PyObject *)&OtamaFeatureRawObjectType);
 
     Py_INCREF(PyExc_OtamaError);
     PyModule_AddObject(module, "error", (PyObject *)&OtamaObjectType);
