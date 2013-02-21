@@ -484,6 +484,35 @@ OtamaObject_remove(OtamaObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
+static PyObject *
+OtamaObject_exists(OtamaObject *self, PyObject *args)
+{
+    PyObject *id;
+    otama_status_t ret;
+    otama_id_t otama_id;
+    int result = 0;
+
+    if (!PyArg_ParseTuple(args, "O", &id)) {
+        PyErr_SetString(PyExc_TypeError, "argument error");
+        return NULL;
+    }
+
+
+    ret = otama_id_hexstr2bin(&otama_id, PyString_AsString(id));
+    if (ret != OTAMA_STATUS_OK) {
+        otamapy_raise(ret);
+        return NULL;
+    }
+
+    ret = otama_exists(self->otama, &result, &otama_id);
+    if (ret != OTAMA_STATUS_OK) {
+        otamapy_raise(ret);
+        return NULL;
+    }
+
+    return result == 0 ? PyBool_FromLong(0) : PyBool_FromLong(1);
+}
+
 static PyMethodDef OtamaObject_methods[] = {
     {"open", (PyCFunction)OtamaObject_open, METH_VARARGS|METH_STATIC,
      "open Otama"},
@@ -503,6 +532,8 @@ static PyMethodDef OtamaObject_methods[] = {
      "search from Otama DataBase"},
     {"similarity", (PyCFunction)OtamaObject_similarity, METH_VARARGS,
      "check similarity"},
+    {"exists", (PyCFunction)OtamaObject_exists, METH_VARARGS,
+     "exist image in Otama DataBase"},
     {NULL, NULL, 0, NULL}
 };
 
