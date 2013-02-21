@@ -11,7 +11,12 @@ kvs = None
 with open(os.path.join(DATA_DIR, 'kvs.json')) as fp:
     kvs = json.load(fp)
 
+last_id = None
 db = Otama(CONFIG_FILE)
 for result in db.search(10, TARGET_FILE):
     key = result['id']
     print("sim=%.3f, file=%s" % (result['similarity'], kvs[key]))
+    last_id = result['id']
+
+print db.exists(last_id)
+print db.exists('a' + last_id[1:-1] + 'b')
