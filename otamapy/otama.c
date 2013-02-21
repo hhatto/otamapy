@@ -101,7 +101,12 @@ pyobj2variant(PyObject *object, otama_variant_t *var)
         otama_variant_set_int(var, PyLong_AsLong(object));
     }
     else if (PyString_Check(object)) {
-        otama_variant_set_string(var, PyString_AsString(object));
+        if (strlen(PyString_AsString(object)) == PyString_GET_SIZE(object)) {
+            otama_variant_set_string(var, PyString_AsString(object));
+        }
+        else {
+            otama_variant_set_binary(var, PyString_AsString(object), PyString_GET_SIZE(object));
+        }
     }
     else if (PyTuple_Check(object)) {
         int len = PyTuple_Size(object), i;
@@ -210,7 +215,7 @@ OtamaObject_new(PyTypeObject *type, PyObject *args)
                 var = otama_variant_new(pool);
 
                 pyobj2variant(config, var);
-                otama_open_opt(&self->otama, var);
+                ret = otama_open_opt(&self->otama, var);
 
                 otama_variant_pool_free(&pool);
             }
@@ -283,7 +288,7 @@ static PyObject *
 OtamaObject_close(OtamaObject *self)
 {
     if (self->otama) {
-        otama_close(&(self->otama));
+        otama_close(&self->otama);
         self->otama = NULL;
     }
 
@@ -374,6 +379,43 @@ OtamaObject_search(OtamaObject *self, PyObject *args)
 }
 
 static PyObject *
+OtamaObject_similarity(OtamaObject *self, PyObject *args)
+{
+    PyObject *data1, *data2;
+    otama_status_t ret;
+    otama_variant_pool_t *pool;
+    otama_variant_t *var1, *var2;
+    float similarity = 0.0f;
+
+    if (!PyArg_ParseTuple(args, "OO", &data1, &data2)) {
+        PyErr_SetString(PyExc_TypeError, "argument error");
+        return NULL;
+    }
+
+    if (!(PyDict_Check(data1) && PyDict_Check(data2))) {
+        PyErr_SetString(PyExc_OtamaError, "invalid argument type");
+        return NULL;
+    }
+
+    pool = otama_variant_pool_alloc();
+    var1 = otama_variant_new(pool);
+    var2 = otama_variant_new(pool);
+
+    pyobj2variant(data1, var1);
+    pyobj2variant(data2, var2);
+
+	ret = otama_similarity(self->otama, &similarity, var1, var2);
+	if (ret != OTAMA_STATUS_OK) {
+		otama_variant_pool_free(&pool);
+		otamapy_raise(ret);
+		return NULL;
+	}
+	otama_variant_pool_free(&pool);
+
+	return PyFloat_FromDouble(similarity);
+}
+
+static PyObject *
 OtamaObject_insert(OtamaObject *self, PyObject *args)
 {
 	char hexid[OTAMA_ID_HEXSTR_LEN];
@@ -459,6 +501,8 @@ static PyMethodDef OtamaObject_methods[] = {
      "remove id from Otama DataBase"},
     {"search", (PyCFunction)OtamaObject_search, METH_VARARGS,
      "search from Otama DataBase"},
+    {"similarity", (PyCFunction)OtamaObject_similarity, METH_VARARGS,
+     "check similarity"},
     {NULL, NULL, 0, NULL}
 };
 
@@ -556,7 +600,7 @@ initotama(void)
     if (PyType_Ready(&OtamaObjectType) < 0)
         OTAMAPY_INIT_ERROR;
 
-    PyExc_OtamaError = PyErr_NewException("otama.error", NULL, NULL);
+    PyExc_OtamaError = PyErr_NewException("otama.OtamaError", NULL, NULL);
 
     Py_INCREF(&OtamaObjectType);
     PyModule_AddObject(module, "Otama", (PyObject *)&OtamaObjectType);
