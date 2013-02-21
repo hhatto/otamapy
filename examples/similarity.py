@@ -23,4 +23,5 @@ print db.similarity({'raw': fv},
 print db.similarity({'raw': fv},
                     {'file': TARGET_FILE2})
 
+fv.dispose()
 db.close()

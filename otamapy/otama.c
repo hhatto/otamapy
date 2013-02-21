@@ -561,6 +561,15 @@ OtamaObject_feature_raw(OtamaObject *self, PyObject *args)
     return pyraw;
 }
 
+static PyObject *
+OtamaFeatureRawObject_dispose(OtamaFeatureRawObject *self)
+{
+    otama_feature_raw_free(&self->raw);
+    self->raw = NULL;
+
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef OtamaObject_methods[] = {
     {"open", (PyCFunction)OtamaObject_open, METH_VARARGS|METH_STATIC,
      "open Otama"},
@@ -639,6 +648,8 @@ static PyTypeObject OtamaObjectType = {
 };
 
 static PyMethodDef OtamaFeatureRawObject_methods[] = {
+    {"dispose", (PyCFunction)OtamaFeatureRawObject_dispose, METH_NOARGS,
+     "free resource"},
     {NULL, NULL, 0, NULL}
 };
 
