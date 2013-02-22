@@ -2,6 +2,9 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include "structmember.h"
 #include "otama.h"
@@ -369,6 +372,14 @@ OtamaObject_search(OtamaObject *self, PyObject *args)
 
     if (PyString_Check(data)) {
         const char *_tmp = PyString_AsString(data);
+        char _err_tmp[120] = "not exist file ";
+        struct stat st;
+        if (stat(_tmp, &st)) {
+            otama_variant_pool_free(&pool);
+            strcat(_err_tmp, _tmp);
+            PyErr_SetString(PyExc_IOError, _err_tmp);
+            return NULL;
+        }
         ret = otama_search_file(self->otama, &results, num, _tmp);
     }
     else {
