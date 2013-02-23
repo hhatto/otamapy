@@ -5,6 +5,9 @@ all:
 .PHONY: test
 
 test:
+	nosetests
+
+example:
 	make clean;
 	easy_install -ZU .
 	cd examples && python store.py && python search.py && python remove_and_search.py
