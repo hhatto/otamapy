@@ -366,6 +366,11 @@ OtamaObject_search(OtamaObject *self, PyObject *args)
         return NULL;
     }
 
+    if (!self->otama) {
+        PyErr_SetString(PyExc_OtamaError, "not initialize/config error");
+        return NULL;
+    }
+
 	pool = otama_variant_pool_alloc();
 	var = otama_variant_new(pool);
     pyobj2variant(data, var);
