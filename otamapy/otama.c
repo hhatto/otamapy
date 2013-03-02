@@ -328,6 +328,11 @@ OtamaObject_create_table(OtamaObject *self)
 {
     otama_status_t ret;
 
+    if (!self->otama) {
+        PyErr_SetString(PyExc_OtamaError, "not initialize/config error");
+        return NULL;
+    }
+
     ret = otama_create_table(self->otama);
     if (ret != OTAMA_STATUS_OK) {
         otamapy_raise(ret);
@@ -340,6 +345,11 @@ static PyObject *
 OtamaObject_drop_table(OtamaObject *self)
 {
     otama_status_t ret;
+
+    if (!self->otama) {
+        PyErr_SetString(PyExc_OtamaError, "not initialize/config error");
+        return NULL;
+    }
 
     ret = otama_drop_table(self->otama);
     if (ret != OTAMA_STATUS_OK) {
