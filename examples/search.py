@@ -18,5 +18,5 @@ for result in db.search(10, TARGET_FILE):
     print("sim=%.3f, file=%s" % (result['similarity'], kvs[key]))
     last_id = result['id']
 
-print db.exists(last_id)
-print db.exists('a' + last_id[1:-1] + 'b')
+print(db.exists(last_id))
+print(db.exists('a' + last_id[1:-1] + 'b'))
