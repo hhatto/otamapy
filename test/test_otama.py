@@ -1,5 +1,8 @@
 import unittest
-from StringIO import StringIO
+try:
+    from StringIO import StringIO
+except:
+    from io import StringIO
 from otama import Otama
 
 
