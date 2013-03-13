@@ -12,6 +12,7 @@
 #if PY_MAJOR_VERSION >= 3
 #define PY3
 #define PyString_Check PyUnicode_Check
+#define PyString_GET_SIZE PyUnicode_GET_SIZE
 #define PyString_FromString PyUnicode_FromString
 #define PyString_AsString PyUnicode_AS_DATA
 #define OTAMAPY_INIT_ERROR return NULL
