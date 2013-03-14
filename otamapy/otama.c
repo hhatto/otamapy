@@ -268,6 +268,9 @@ OtamaObject_open(OtamaObject *self, PyObject *args)
 
     if (!self) {
         self = (OtamaObject *)OtamaObject_new(&OtamaObjectType, args);
+        if (!self) {
+            return NULL;
+        }
     }
 
     if (config) {
@@ -281,7 +284,7 @@ OtamaObject_open(OtamaObject *self, PyObject *args)
             pool = otama_variant_pool_alloc();
             var = otama_variant_new(pool);
             pyobj2variant(config, var);
-            otama_open_opt(&self->otama, var);
+            ret = otama_open_opt(&self->otama, var);
 
             otama_variant_pool_free(&pool);
         }
