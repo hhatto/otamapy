@@ -29,5 +29,5 @@ db.pull()
 with open(os.path.join(DATA_DIR, 'kvs.json'), 'w') as fp:
     json.dump(kvs, fp)
 
-print db.search(2, TARGET_FILE)
+print(db.search(2, TARGET_FILE))
 db.close()
