@@ -3,7 +3,7 @@ import os.path
 from otama import Otama
 
 BASEPATH = os.path.abspath(os.path.dirname(__file__))
-print BASEPATH
+print(BASEPATH)
 
 while True:
     db = Otama(os.path.join(BASEPATH, 'test.conf'))

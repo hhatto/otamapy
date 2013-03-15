@@ -17,7 +17,7 @@ for result in db.search(10, TARGET_FILE):
     last_id = result['id']
     print("sim=%.3f, file=%s" % (result['similarity'], kvs[key]))
 
-print "=*" * 30
+print("=*" * 30)
 db.remove(last_id)
 db.pull()
 for result in db.search(10, TARGET_FILE):
