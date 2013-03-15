@@ -18,10 +18,9 @@ print db.similarity({'data': open(TARGET_FILE1).read()},
 
 fv = db.feature_raw({'file': TARGET_FILE1})
 print fv
-print db.similarity({'raw': fv},
-                    {'file': TARGET_FILE1})
-print db.similarity({'raw': fv},
-                    {'file': TARGET_FILE2})
+print db.similarity({'raw': fv}, {'file': TARGET_FILE1})
+print db.similarity({'raw': fv}, {'file': TARGET_FILE2})
+print db.similarity({'raw': fv}, {'file': unicode(TARGET_FILE2)})
 
 fv.dispose()
 db.close()

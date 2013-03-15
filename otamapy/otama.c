@@ -118,6 +118,9 @@ pyobj2variant(PyObject *object, otama_variant_t *var)
             otama_variant_set_binary(var, PyString_AsString(object), PyString_GET_SIZE(object));
         }
     }
+    else if (PyUnicode_Check(object)) {
+        otama_variant_set_string(var, PyBytes_AsString(object));
+    }
     else if (PyTuple_Check(object)) {
         int len = PyTuple_Size(object), i;
         otama_variant_set_array(var);
@@ -221,6 +224,9 @@ OtamaObject_new(PyTypeObject *type, PyObject *args)
         if (config) {
             if (PyString_Check(config)) {
                 ret = otama_open(&self->otama, PyString_AsString(config));
+            }
+            else if (PyUnicode_Check(config)) {
+                ret = otama_open(&self->otama, PyUnicode_AS_DATA(config));
             }
             else if (PyDict_Check(config)) {
                 otama_variant_t *var;
