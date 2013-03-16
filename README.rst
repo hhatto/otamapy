@@ -6,6 +6,8 @@ About
 otamapy is Python Interface for otama_ (otama is CBIR.).
 
 .. _otama: https://github.com/nagadomi/otama
+.. _nv: https://github.com/nagadomi/nv
+.. _eiio: https://github.com/nagadomi/eiio
 
 
 Installation
@@ -21,8 +23,8 @@ from easy_install::
 
 Requirements
 ------------
-* Python2.7+
-
+* Python2.7+ and Python3.3+
+* otama library (otama_, nv_, eiio_)
 
 Usage
 -----
