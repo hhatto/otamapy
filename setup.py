@@ -9,7 +9,7 @@ include_dirs = [get_python_inc()]
 library_dirs = ['/usr/local/lib']
 
 setup(name='otamapy',
-      version="0.1.2",
+      version="0.2",
       description="otamapy is Python Interface for otama.",
       long_description=open('README.rst').read(),
       author='Hideo Hattori',
