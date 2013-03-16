@@ -13,14 +13,14 @@ with open(os.path.join(DATA_DIR, 'kvs.json')) as fp:
     kvs = json.load(fp)
 
 db = Otama({'driver': {'name': 'vlad_nodb'}})
-print(db.similarity({'data': open(TARGET_FILE1).read()},
-                    {'data': open(TARGET_FILE2).read()}))
+print(db.similarity({'data': open(TARGET_FILE1, 'rb').read()},
+                    {'data': open(TARGET_FILE2, 'rb').read()}))
 
 fv = db.feature_raw({'file': TARGET_FILE1})
 print(fv)
 print(db.similarity({'raw': fv}, {'file': TARGET_FILE1}))
 print(db.similarity({'raw': fv}, {'file': TARGET_FILE2}))
-print(db.similarity({'raw': fv}, {'file': unicode(TARGET_FILE2)}))
+print(db.similarity({'raw': fv}, {'file': str(TARGET_FILE2)}))
 
 fv.dispose()
 db.close()

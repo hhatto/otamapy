@@ -9,8 +9,9 @@ DATA_DIR = os.path.join(BASE_DIR, 'data')
 IMAGE_DIR = os.path.join(BASE_DIR, 'image')
 TARGET_FILE = os.path.join(BASE_DIR, 'image/lena.jpg')
 config = {'namespace': 'testnamespace',
-          'driver': {'name': 'color', 'data_dir': './data', 'color_weight': 0.2},
-          'database': {'driver': 'sqlite3', 'name': './data/store.sqlite3'}
+          'driver': {'name': 'color', 'data_dir': DATA_DIR, 'color_weight': 0.2},
+          'database': {'driver': 'sqlite3',
+                       'name': os.path.join(DATA_DIR, 'store.sqlite3')}
           }
 
 if not os.path.exists(DATA_DIR):

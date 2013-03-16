@@ -11,10 +11,10 @@
 
 #if PY_MAJOR_VERSION >= 3
 #define PY3
-#define PyString_Check PyUnicode_Check
+#define PyString_Check PyBytes_Check
 #define PyString_GET_SIZE PyUnicode_GET_SIZE
 #define PyString_FromString PyUnicode_FromString
-#define PyString_AsString PyUnicode_AS_DATA
+#define PyString_AsString PyBytes_AsString
 #define OTAMAPY_INIT_ERROR return NULL
 #else
 #define OTAMAPY_INIT_ERROR return
@@ -39,6 +39,25 @@ typedef struct {
     otama_feature_raw_t *raw;
 } OtamaFeatureRawObject;
 
+
+static void
+otamapy_raise(otama_status_t ret)
+{
+    switch (ret) {
+        case OTAMA_STATUS_OK:
+            break;
+        case OTAMA_STATUS_NODATA:
+	    case OTAMA_STATUS_INVALID_ARGUMENTS:
+	    case OTAMA_STATUS_ASSERTION_FAILURE:
+	    case OTAMA_STATUS_SYSERROR:
+	    case OTAMA_STATUS_NOT_IMPLEMENTED:
+            PyErr_SetString(PyExc_OtamaError, otama_status_message(ret));
+            break;
+        default:
+            PyErr_SetString(PyExc_OtamaError, "Unknown Error");
+            break;
+    }
+}
 
 static PyObject *
 variant2pyobj(otama_variant_t *var)
@@ -87,7 +106,15 @@ variant2pyobj(otama_variant_t *var)
 static void
 pyobj2variant_pair(PyObject *key, PyObject *value, otama_variant_t *var)
 {
-    pyobj2variant(value, otama_variant_hash_at(var, PyString_AsString(key)));
+    const char *key_string;
+#ifdef PY3
+    PyObject *utf8_item;
+    utf8_item = PyUnicode_AsUTF8String(key);
+    key_string = PyBytes_AsString(utf8_item);
+#else
+    key_string = PyString_AsString(key);
+#endif
+    pyobj2variant(value, otama_variant_hash_at(var, key_string));
 }
 
 static void
@@ -115,11 +142,33 @@ pyobj2variant(PyObject *object, otama_variant_t *var)
             otama_variant_set_string(var, PyString_AsString(object));
         }
         else {
-            otama_variant_set_binary(var, PyString_AsString(object), PyString_GET_SIZE(object));
+            otama_variant_set_binary(var, PyString_AsString(object),
+                                     PyString_GET_SIZE(object));
         }
     }
     else if (PyUnicode_Check(object)) {
+#ifdef PY3
+        PyObject *utf8_item;
+        utf8_item = PyUnicode_AsUTF8String(object);
+        if (!utf8_item) {
+            // TODO: error handling
+            printf("error\n");
+        }
+
+        if (strlen(PyBytes_AsString(utf8_item)) == PyUnicode_GET_SIZE(object)) {
+            const char *_tmp = PyBytes_AsString(utf8_item);
+            otama_variant_set_string(var, _tmp);
+        }
+        else {
+            // TODO: not need?
+            otama_variant_set_binary(var, PyBytes_AsString(object),
+                                     PyString_GET_SIZE(object));
+        }
+
+        Py_XDECREF(utf8_item);
+#else
         otama_variant_set_string(var, PyBytes_AsString(object));
+#endif
     }
     else if (PyTuple_Check(object)) {
         int len = PyTuple_Size(object), i;
@@ -178,110 +227,27 @@ make_results(const otama_result_t *results)
     return result_tuple;
 }
 
-static void
-otamapy_raise(otama_status_t ret)
-{
-    switch (ret) {
-        case OTAMA_STATUS_OK:
-            break;
-        case OTAMA_STATUS_NODATA:
-	    case OTAMA_STATUS_INVALID_ARGUMENTS:
-	    case OTAMA_STATUS_ASSERTION_FAILURE:
-	    case OTAMA_STATUS_SYSERROR:
-	    case OTAMA_STATUS_NOT_IMPLEMENTED:
-            PyErr_SetString(PyExc_OtamaError, otama_status_message(ret));
-            break;
-        default:
-            PyErr_SetString(PyExc_OtamaError, "Unknown Error");
-            break;
-    }
-}
-
-static void
-Otama_dealloc(OtamaObject *self)
-{
-    if (self->otama) {
-        otama_close(&(self->otama));
-        self->otama = NULL;
-    }
-    Py_TYPE(self)->tp_free((PyObject*)self);
-}
-
+/*
+ * @return PyObject *self or NULL
+ */
 static PyObject *
-OtamaObject_new(PyTypeObject *type, PyObject *args)
+setup_config(OtamaObject *self, PyObject *config)
 {
-    PyObject *config = NULL;
-    OtamaObject *self;
     otama_status_t ret = OTAMA_STATUS_OK;
-
-    if (!PyArg_ParseTuple(args, "|O", &config)) {
-        PyErr_SetString(PyExc_TypeError, "argument error");
-        return NULL;
-    }
-
-    self = (OtamaObject *)type->tp_alloc(type, 0);
-    if (self) {
-        if (config) {
-            if (PyString_Check(config)) {
-                ret = otama_open(&self->otama, PyString_AsString(config));
-            }
-            else if (PyUnicode_Check(config)) {
-                ret = otama_open(&self->otama, PyUnicode_AS_DATA(config));
-            }
-            else if (PyDict_Check(config)) {
-                otama_variant_t *var;
-                otama_variant_pool_t *pool;
-
-                pool = otama_variant_pool_alloc();
-                var = otama_variant_new(pool);
-
-                pyobj2variant(config, var);
-                ret = otama_open_opt(&self->otama, var);
-
-                otama_variant_pool_free(&pool);
-            }
-            else {
-                PyErr_SetString(PyExc_TypeError, "not support type.");
-                return NULL;
-            }
-
-            if (ret != OTAMA_STATUS_OK) {
-                otamapy_raise(ret);
-                return NULL;
-            }
-        }
-    }
-
-    return (PyObject *)self;
-}
-
-static int
-OtamaObject_init(OtamaObject *self, PyObject *args)
-{
-    return 0;
-}
-
-static PyObject *
-OtamaObject_open(OtamaObject *self, PyObject *args)
-{
-    PyObject *config = NULL;
-    otama_status_t ret = OTAMA_STATUS_OK;
-
-    if (!PyArg_ParseTuple(args, "|O", &config)) {
-        PyErr_SetString(PyExc_TypeError, "argument error");
-        return NULL;
-    }
-
-    if (!self) {
-        self = (OtamaObject *)OtamaObject_new(&OtamaObjectType, args);
-        if (!self) {
-            return NULL;
-        }
-    }
 
     if (config) {
         if (PyString_Check(config)) {
             ret = otama_open(&self->otama, PyString_AsString(config));
+        }
+        else if (PyUnicode_Check(config)) {
+            PyObject *utf8_item;
+            utf8_item = PyUnicode_AsUTF8String(config);
+            if (!utf8_item) {
+                // TODO: error handling
+                printf("error\n");
+            }
+            ret = otama_open(&self->otama, PyBytes_AsString(utf8_item));
+            Py_XDECREF(utf8_item);
         }
         else if (PyDict_Check(config)) {
             otama_variant_t *var;
@@ -289,6 +255,7 @@ OtamaObject_open(OtamaObject *self, PyObject *args)
 
             pool = otama_variant_pool_alloc();
             var = otama_variant_new(pool);
+
             pyobj2variant(config, var);
             ret = otama_open_opt(&self->otama, var);
 
@@ -306,6 +273,63 @@ OtamaObject_open(OtamaObject *self, PyObject *args)
     }
 
     return (PyObject *)self;
+}
+
+static void
+Otama_dealloc(OtamaObject *self)
+{
+    if (self->otama) {
+        otama_close(&(self->otama));
+        self->otama = NULL;
+    }
+    Py_TYPE(self)->tp_free((PyObject*)self);
+}
+
+static PyObject *
+OtamaObject_new(PyTypeObject *type, PyObject *args)
+{
+    PyObject *config = NULL;
+    OtamaObject *self;
+
+    if (!PyArg_ParseTuple(args, "|O", &config)) {
+        PyErr_SetString(PyExc_TypeError, "argument error");
+        return NULL;
+    }
+
+    self = (OtamaObject *)type->tp_alloc(type, 0);
+    if (self) {
+        if (!setup_config(self, config)) {
+            return NULL;
+        }
+    }
+
+    return (PyObject *)self;
+}
+
+static int
+OtamaObject_init(OtamaObject *self, PyObject *args)
+{
+    return 0;
+}
+
+static PyObject *
+OtamaObject_open(OtamaObject *self, PyObject *args)
+{
+    PyObject *config = NULL;
+
+    if (!PyArg_ParseTuple(args, "|O", &config)) {
+        PyErr_SetString(PyExc_TypeError, "argument error");
+        return NULL;
+    }
+
+    if (!self) {
+        self = (OtamaObject *)OtamaObject_new(&OtamaObjectType, args);
+        if (!self) {
+            return NULL;
+        }
+    }
+
+    return setup_config(self, config);
 }
 
 static PyObject *
@@ -407,6 +431,25 @@ OtamaObject_search(OtamaObject *self, PyObject *args)
         }
         ret = otama_search_file(self->otama, &results, num, _tmp);
     }
+    else if (PyUnicode_Check(data)) {
+        PyObject *utf8_item;
+        utf8_item = PyUnicode_AsUTF8String(data);
+        if (!utf8_item) {
+            // TODO: error handling
+            printf("error\n");
+        }
+        const char *_tmp = PyBytes_AsString(utf8_item);
+        char _err_tmp[120] = "not exist file ";
+        struct stat st;
+        if (stat(_tmp, &st)) {
+            otama_variant_pool_free(&pool);
+            strcat(_err_tmp, _tmp);
+            PyErr_SetString(PyExc_IOError, _err_tmp);
+            return NULL;
+        }
+        ret = otama_search_file(self->otama, &results, num, _tmp);
+        Py_XDECREF(utf8_item);
+    }
     else {
         // TODO: not implementation
         ret = otama_search(self->otama, &results, num, var);
@@ -486,6 +529,17 @@ OtamaObject_insert(OtamaObject *self, PyObject *args)
         const char *_tmp = PyString_AsString(data);
         ret = otama_insert_file(self->otama, &id, _tmp);
     }
+    else if (PyUnicode_Check(data)) {
+        PyObject *utf8_item;
+        utf8_item = PyUnicode_AsUTF8String(data);
+        if (!utf8_item) {
+            // TODO: error handling
+            printf("error\n");
+        }
+        const char *_tmp = PyBytes_AsString(utf8_item);
+        ret = otama_insert_file(self->otama, &id, _tmp);
+        Py_XDECREF(utf8_item);
+    }
     else {
         PyErr_SetString(PyExc_TypeError, "not support type");
         return NULL;
@@ -544,7 +598,14 @@ OtamaObject_exists(OtamaObject *self, PyObject *args)
         return NULL;
     }
 
+#ifdef PY3
+    PyObject *utf8_item;
+    utf8_item = PyUnicode_AsUTF8String(id);
+    ret = otama_id_hexstr2bin(&otama_id, PyBytes_AsString(utf8_item));
+    Py_XDECREF(utf8_item);
+#else
     ret = otama_id_hexstr2bin(&otama_id, PyString_AsString(id));
+#endif
     if (ret != OTAMA_STATUS_OK) {
         otamapy_raise(ret);
         return NULL;
