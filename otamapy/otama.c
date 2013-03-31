@@ -856,6 +856,7 @@ initotama(void)
     Py_INCREF(PyExc_OtamaError);
     PyModule_AddObject(module, "error", (PyObject *)&OtamaObjectType);
 
+    otama_log_set_level(OTAMA_LOG_LEVEL_ERROR);
 #ifdef PY3
     return module;
 #endif
