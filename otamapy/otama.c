@@ -815,7 +815,8 @@ static struct PyModuleDef OtamaModuleDef = {
     -1,
     OtamaMethods,
 };
-PyObject *
+
+PyMODINIT_FUNC
 PyInit_otama(void)
 
 #else
