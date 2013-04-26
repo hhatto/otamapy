@@ -659,6 +659,44 @@ OtamaObject_feature_raw(OtamaObject *self, PyObject *args)
 }
 
 static PyObject *
+OtamaObject_feature_string(OtamaObject *self, PyObject *args)
+{
+    otama_status_t ret;
+    PyObject *pystr, *query;
+    otama_variant_pool_t *pool;
+    otama_variant_t *var;
+    char *feature_string = NULL;
+
+    if (!PyArg_ParseTuple(args, "O", &query)) {
+        PyErr_SetString(PyExc_TypeError, "argument error");
+        return NULL;
+    }
+
+    if (!PyDict_Check(query)) {
+        PyErr_SetString(PyExc_TypeError, "invalid argument");
+        return NULL;
+    }
+
+    pool = otama_variant_pool_alloc();
+    var = otama_variant_new(pool);
+
+    pyobj2variant(query, var);
+
+    ret = otama_feature_string(self->otama, &feature_string, var);
+    if (ret != OTAMA_STATUS_OK) {
+        otama_variant_pool_free(&pool);
+        otamapy_raise(ret);
+        return NULL;
+    }
+    otama_variant_pool_free(&pool);
+
+    pystr = PyString_FromString(feature_string);
+    // TODO: error handling
+
+    return pystr;
+}
+
+static PyObject *
 OtamaFeatureRawObject_dispose(OtamaFeatureRawObject *self)
 {
     otama_feature_raw_free(&self->raw);
@@ -688,6 +726,8 @@ static PyMethodDef OtamaObject_methods[] = {
      "check similarity"},
     {"exists", (PyCFunction)OtamaObject_exists, METH_VARARGS,
      "exist image in Otama DataBase"},
+    {"feature_string", (PyCFunction)OtamaObject_feature_string, METH_VARARGS,
+     "return feature string value"},
     {"feature_raw", (PyCFunction)OtamaObject_feature_raw, METH_VARARGS,
      "return feature raw value"},
     {NULL, NULL, 0, NULL}
