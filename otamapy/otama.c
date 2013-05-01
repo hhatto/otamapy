@@ -47,10 +47,10 @@ otamapy_raise(otama_status_t ret)
         case OTAMA_STATUS_OK:
             break;
         case OTAMA_STATUS_NODATA:
-	    case OTAMA_STATUS_INVALID_ARGUMENTS:
-	    case OTAMA_STATUS_ASSERTION_FAILURE:
-	    case OTAMA_STATUS_SYSERROR:
-	    case OTAMA_STATUS_NOT_IMPLEMENTED:
+        case OTAMA_STATUS_INVALID_ARGUMENTS:
+        case OTAMA_STATUS_ASSERTION_FAILURE:
+        case OTAMA_STATUS_SYSERROR:
+        case OTAMA_STATUS_NOT_IMPLEMENTED:
             PyErr_SetString(PyExc_OtamaError, otama_status_message(ret));
             break;
         default:
@@ -80,10 +80,10 @@ variant2pyobj(otama_variant_t *var)
             }
             return tuple;
         }
-	    case OTAMA_VARIANT_TYPE_HASH: {
-		    otama_variant_t *keys = otama_variant_hash_keys(var);
-		    long count = otama_variant_array_count(keys);
-		    int i;
+        case OTAMA_VARIANT_TYPE_HASH: {
+            otama_variant_t *keys = otama_variant_hash_keys(var);
+            long count = otama_variant_array_count(keys);
+            int i;
             PyObject *dict = PyDict_New();
             for (i = 0; i < count; ++i) {
                 PyObject *_value = variant2pyobj(otama_variant_hash_at2(var, otama_variant_array_at(keys, i)));
@@ -122,10 +122,10 @@ pyobj2variant(PyObject *object, otama_variant_t *var)
 {
     if (PyBool_Check(object)) {
         if (Py_True == object) {
-	        otama_variant_set_int(var, 1);
+            otama_variant_set_int(var, 1);
         }
         else {
-	        otama_variant_set_int(var, 0);
+            otama_variant_set_int(var, 0);
         }
     }
     else if (Py_None == object) {
@@ -210,10 +210,10 @@ make_results(const otama_result_t *results)
 
     result_tuple = PyTuple_New(num);
     for (i = 0; i < num; ++i) {
-		otama_variant_t *value = otama_result_value(results, i);
+        otama_variant_t *value = otama_result_value(results, i);
         char hexid[OTAMA_ID_HEXSTR_LEN];
 
-		otama_id_bin2hexstr(hexid, otama_result_id(results, i));
+        otama_id_bin2hexstr(hexid, otama_result_id(results, i));
         PyObject *_result = variant2pyobj(value);   // return new dict
         PyObject *_hexid = PyString_FromString(hexid);
         PyDict_SetItemString(_result, "id", _hexid);
@@ -346,7 +346,7 @@ OtamaObject_close(OtamaObject *self)
 static PyObject *
 OtamaObject_pull(OtamaObject *self)
 {
-	otama_status_t ret;
+    otama_status_t ret;
 
     ret = otama_pull(self->otama);
     if (ret != OTAMA_STATUS_OK) {
@@ -398,10 +398,10 @@ static PyObject *
 OtamaObject_search(OtamaObject *self, PyObject *args)
 {
     int num;
-	otama_status_t ret;
-	otama_result_t *results = NULL;
-	otama_variant_pool_t *pool;
-	otama_variant_t *var;
+    otama_status_t ret;
+    otama_result_t *results = NULL;
+    otama_variant_pool_t *pool;
+    otama_variant_t *var;
     PyObject *data;
     PyObject *result_tuple;
 
@@ -415,8 +415,8 @@ OtamaObject_search(OtamaObject *self, PyObject *args)
         return NULL;
     }
 
-	pool = otama_variant_pool_alloc();
-	var = otama_variant_new(pool);
+    pool = otama_variant_pool_alloc();
+    var = otama_variant_new(pool);
     pyobj2variant(data, var);
 
     if (PyString_Check(data)) {
@@ -462,8 +462,8 @@ OtamaObject_search(OtamaObject *self, PyObject *args)
     }
     result_tuple = make_results(results);
 
-	otama_result_free(&results);
-	otama_variant_pool_free(&pool);
+    otama_result_free(&results);
+    otama_variant_pool_free(&pool);
 
     return result_tuple;
 }
@@ -494,25 +494,25 @@ OtamaObject_similarity(OtamaObject *self, PyObject *args)
     pyobj2variant(data1, var1);
     pyobj2variant(data2, var2);
 
-	ret = otama_similarity(self->otama, &similarity, var1, var2);
-	if (ret != OTAMA_STATUS_OK) {
-		otama_variant_pool_free(&pool);
-		otamapy_raise(ret);
-		return NULL;
-	}
-	otama_variant_pool_free(&pool);
+    ret = otama_similarity(self->otama, &similarity, var1, var2);
+    if (ret != OTAMA_STATUS_OK) {
+        otama_variant_pool_free(&pool);
+        otamapy_raise(ret);
+        return NULL;
+    }
+    otama_variant_pool_free(&pool);
 
-	return PyFloat_FromDouble(similarity);
+    return PyFloat_FromDouble(similarity);
 }
 
 static PyObject *
 OtamaObject_insert(OtamaObject *self, PyObject *args)
 {
-	char hexid[OTAMA_ID_HEXSTR_LEN];
-	otama_id_t id;
-	otama_status_t ret;
-	otama_variant_pool_t *pool;
-	otama_variant_t *var;
+    char hexid[OTAMA_ID_HEXSTR_LEN];
+    otama_id_t id;
+    otama_status_t ret;
+    otama_variant_pool_t *pool;
+    otama_variant_t *var;
     PyObject *data;
     PyObject *pyobj_id;
 
@@ -521,9 +521,9 @@ OtamaObject_insert(OtamaObject *self, PyObject *args)
         return NULL;
     }
 
-	pool = otama_variant_pool_alloc();
-	var = otama_variant_new(pool);
-	pyobj2variant(data, var);
+    pool = otama_variant_pool_alloc();
+    var = otama_variant_new(pool);
+    pyobj2variant(data, var);
 
     if (PyString_Check(data)) {
         const char *_tmp = PyString_AsString(data);
@@ -551,8 +551,8 @@ OtamaObject_insert(OtamaObject *self, PyObject *args)
         return NULL;
     }
 
-	otama_id_bin2hexstr(hexid, &id);
-	otama_variant_pool_free(&pool);
+    otama_id_bin2hexstr(hexid, &id);
+    otama_variant_pool_free(&pool);
 
     pyobj_id = Py_BuildValue("s", hexid);
     return pyobj_id;
