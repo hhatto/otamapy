@@ -75,7 +75,7 @@ variant2pyobj(otama_variant_t *var)
             PyObject *tuple = PyTuple_New(count);
             for (i = 0; i < count; ++i) {
                 PyObject *_value = variant2pyobj(otama_variant_array_at(var, i));
-                PyTuple_SetItem(tuple, i,_value);
+                PyTuple_SetItem(tuple, i, _value);
                 Py_DECREF(_value);
             }
             return tuple;
