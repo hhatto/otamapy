@@ -151,8 +151,8 @@ pyobj2variant(PyObject *object, otama_variant_t *var)
         PyObject *utf8_item;
         utf8_item = PyUnicode_AsUTF8String(object);
         if (!utf8_item) {
-            // TODO: error handling
-            printf("error\n");
+            PyErr_SetString(PyExc_OtamaError, "don't gen utf8 item");
+            return NULL;
         }
 
         if (strlen(PyBytes_AsString(utf8_item)) == PyUnicode_GET_SIZE(object)) {
@@ -243,8 +243,8 @@ setup_config(OtamaObject *self, PyObject *config)
             PyObject *utf8_item;
             utf8_item = PyUnicode_AsUTF8String(config);
             if (!utf8_item) {
-                // TODO: error handling
-                printf("error\n");
+                PyErr_SetString(PyExc_OtamaError, "don't gen utf8 item");
+                return NULL;
             }
             ret = otama_open(&self->otama, PyBytes_AsString(utf8_item));
             Py_XDECREF(utf8_item);
@@ -435,8 +435,8 @@ OtamaObject_search(OtamaObject *self, PyObject *args)
         PyObject *utf8_item;
         utf8_item = PyUnicode_AsUTF8String(data);
         if (!utf8_item) {
-            // TODO: error handling
-            printf("error\n");
+            PyErr_SetString(PyExc_OtamaError, "don't gen utf8 item");
+            return NULL;
         }
         const char *_tmp = PyBytes_AsString(utf8_item);
         char _err_tmp[120] = "not exist file ";
@@ -533,8 +533,8 @@ OtamaObject_insert(OtamaObject *self, PyObject *args)
         PyObject *utf8_item;
         utf8_item = PyUnicode_AsUTF8String(data);
         if (!utf8_item) {
-            // TODO: error handling
-            printf("error\n");
+            PyErr_SetString(PyExc_OtamaError, "don't gen utf8 item");
+            return NULL;
         }
         const char *_tmp = PyBytes_AsString(utf8_item);
         ret = otama_insert_file(self->otama, &id, _tmp);
