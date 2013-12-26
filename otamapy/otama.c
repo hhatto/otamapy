@@ -358,7 +358,7 @@ OtamaObject_pull(OtamaObject *self)
 }
 
 static PyObject *
-OtamaObject_create_table(OtamaObject *self)
+OtamaObject_create_database(OtamaObject *self)
 {
     otama_status_t ret;
 
@@ -367,7 +367,46 @@ OtamaObject_create_table(OtamaObject *self)
         return NULL;
     }
 
-    ret = otama_create_table(self->otama);
+    ret = otama_create_database(self->otama);
+    if (ret != OTAMA_STATUS_OK) {
+        otamapy_raise(ret);
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+static PyObject *
+OtamaObject_drop_database(OtamaObject *self)
+{
+    otama_status_t ret;
+
+    if (!self->otama) {
+        PyErr_SetString(PyExc_OtamaError, "not initialize/config error");
+        return NULL;
+    }
+
+    ret = otama_drop_database(self->otama);
+    if (ret != OTAMA_STATUS_OK) {
+        otamapy_raise(ret);
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+static PyObject *
+OtamaObject_create_table(OtamaObject *self)
+{
+    otama_status_t ret;
+
+    fprintf(stderr, "This API is deprecated, rename to create_database\n");
+
+    if (!self->otama) {
+        PyErr_SetString(PyExc_OtamaError, "not initialize/config error");
+        return NULL;
+    }
+
+    ret = otama_create_database(self->otama);
     if (ret != OTAMA_STATUS_OK) {
         otamapy_raise(ret);
         return NULL;
@@ -380,12 +419,14 @@ OtamaObject_drop_table(OtamaObject *self)
 {
     otama_status_t ret;
 
+    fprintf(stderr, "This API is deprecated, rename to drop_database\n");
+
     if (!self->otama) {
         PyErr_SetString(PyExc_OtamaError, "not initialize/config error");
         return NULL;
     }
 
-    ret = otama_drop_table(self->otama);
+    ret = otama_drop_database(self->otama);
     if (ret != OTAMA_STATUS_OK) {
         otamapy_raise(ret);
         return NULL;
@@ -712,10 +753,14 @@ static PyMethodDef OtamaObject_methods[] = {
      "close Otama Object"},
     {"pull", (PyCFunction)OtamaObject_pull, METH_NOARGS,
      "pull to Otama DataBase"},
-    {"create_table", (PyCFunction)OtamaObject_create_table, METH_NOARGS,
+    {"create_database", (PyCFunction)OtamaObject_create_database, METH_NOARGS,
      "create Otama DataBase Table"},
-    {"drop_table", (PyCFunction)OtamaObject_drop_table, METH_NOARGS,
+    {"drop_database", (PyCFunction)OtamaObject_drop_database, METH_NOARGS,
      "drop to Otama DataBase Table"},
+    {"create_table", (PyCFunction)OtamaObject_create_table, METH_NOARGS,
+     "create Otama DataBase Table (deprecated)"},
+    {"drop_table", (PyCFunction)OtamaObject_drop_table, METH_NOARGS,
+     "drop to Otama DataBase Table (deprecated)"},
     {"insert", (PyCFunction)OtamaObject_insert, METH_VARARGS,
      "insert image data"},
     {"remove", (PyCFunction)OtamaObject_remove, METH_VARARGS,
