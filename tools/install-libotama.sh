@@ -3,7 +3,8 @@ WORKDIR=`mktemp -d`
 echo $WORKDIR
 
 sudo apt-get install gcc g++ make autoconf libtool libpng-dev libjpeg-dev libgif-dev \
-                     libssl-dev libyaml-dev libsqlite3-dev libpq-dev libmysqlclient-dev
+                     libssl-dev libyaml-dev libsqlite3-dev libpq-dev \
+                     libleveldb-dev libmysqlclient-dev
 
 cd $WORKDIR
 git clone https://github.com/nagadomi/eiio.git
