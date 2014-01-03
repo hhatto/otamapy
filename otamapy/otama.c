@@ -95,6 +95,7 @@ variant2pyobj(otama_variant_t *var)
             return dict;
         }
         case OTAMA_VARIANT_TYPE_NULL:
+            Py_RETURN_NONE;
         default:
             printf("not implementation\n");
             break;
@@ -358,7 +359,7 @@ OtamaObject_pull(OtamaObject *self)
 }
 
 static PyObject *
-OtamaObject_create_table(OtamaObject *self)
+OtamaObject_create_database(OtamaObject *self)
 {
     otama_status_t ret;
 
@@ -367,7 +368,46 @@ OtamaObject_create_table(OtamaObject *self)
         return NULL;
     }
 
-    ret = otama_create_table(self->otama);
+    ret = otama_create_database(self->otama);
+    if (ret != OTAMA_STATUS_OK) {
+        otamapy_raise(ret);
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+static PyObject *
+OtamaObject_drop_database(OtamaObject *self)
+{
+    otama_status_t ret;
+
+    if (!self->otama) {
+        PyErr_SetString(PyExc_OtamaError, "not initialize/config error");
+        return NULL;
+    }
+
+    ret = otama_drop_database(self->otama);
+    if (ret != OTAMA_STATUS_OK) {
+        otamapy_raise(ret);
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+static PyObject *
+OtamaObject_create_table(OtamaObject *self)
+{
+    otama_status_t ret;
+
+    fprintf(stderr, "This API is deprecated, rename to create_database\n");
+
+    if (!self->otama) {
+        PyErr_SetString(PyExc_OtamaError, "not initialize/config error");
+        return NULL;
+    }
+
+    ret = otama_create_database(self->otama);
     if (ret != OTAMA_STATUS_OK) {
         otamapy_raise(ret);
         return NULL;
@@ -380,12 +420,52 @@ OtamaObject_drop_table(OtamaObject *self)
 {
     otama_status_t ret;
 
+    fprintf(stderr, "This API is deprecated, rename to drop_database\n");
+
     if (!self->otama) {
         PyErr_SetString(PyExc_OtamaError, "not initialize/config error");
         return NULL;
     }
 
-    ret = otama_drop_table(self->otama);
+    ret = otama_drop_database(self->otama);
+    if (ret != OTAMA_STATUS_OK) {
+        otamapy_raise(ret);
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+static PyObject *
+OtamaObject_drop_index(OtamaObject *self)
+{
+    otama_status_t ret;
+
+    if (!self->otama) {
+        PyErr_SetString(PyExc_OtamaError, "not initialize/config error");
+        return NULL;
+    }
+
+    ret = otama_drop_index(self->otama);
+    if (ret != OTAMA_STATUS_OK) {
+        otamapy_raise(ret);
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+static PyObject *
+OtamaObject_vacuum_index(OtamaObject *self)
+{
+    otama_status_t ret;
+
+    if (!self->otama) {
+        PyErr_SetString(PyExc_OtamaError, "not initialize/config error");
+        return NULL;
+    }
+
+    ret = otama_vacuum_index(self->otama);
     if (ret != OTAMA_STATUS_OK) {
         otamapy_raise(ret);
         return NULL;
@@ -621,6 +701,54 @@ OtamaObject_exists(OtamaObject *self, PyObject *args)
 }
 
 static PyObject *
+OtamaObject_invoke(OtamaObject *self, PyObject *args)
+{
+    const char *_tmp_method;
+    PyObject *output, *method, *input;
+    otama_status_t ret;
+    otama_variant_pool_t *pool = otama_variant_pool_alloc();
+    otama_variant_t *input_var = otama_variant_new(pool);
+    otama_variant_t *output_var = otama_variant_new(pool);
+
+    if (!PyArg_ParseTuple(args, "OO", &method, &input)) {
+        PyErr_SetString(PyExc_TypeError, "argument error");
+        return NULL;
+    }
+
+    if (PyString_Check(method)) {
+        _tmp_method = PyString_AsString(method);
+    }
+    else if (PyUnicode_Check(method)) {
+        PyObject *utf8_item;
+        utf8_item = PyUnicode_AsUTF8String(method);
+        if (!utf8_item) {
+            PyErr_SetString(PyExc_OtamaError, "don't gen utf8 item");
+            return NULL;
+        }
+        _tmp_method = PyBytes_AsString(utf8_item);
+        Py_XDECREF(utf8_item);
+    }
+    else {
+        PyErr_SetString(PyExc_TypeError, "not support type");
+        return NULL;
+    }
+
+    pyobj2variant(input, input_var);
+
+    ret = otama_invoke(self->otama, _tmp_method, output_var, input_var);
+    if (ret != OTAMA_STATUS_OK) {
+        otama_variant_pool_free(&pool);
+        otamapy_raise(ret);
+        return NULL;
+    }
+
+    output = variant2pyobj(output_var);
+    otama_variant_pool_free(&pool);
+
+    return output;
+}
+
+static PyObject *
 OtamaObject_feature_raw(OtamaObject *self, PyObject *args)
 {
     otama_status_t ret;
@@ -711,25 +839,35 @@ static PyMethodDef OtamaObject_methods[] = {
     {"close", (PyCFunction)OtamaObject_close, METH_NOARGS,
      "close Otama Object"},
     {"pull", (PyCFunction)OtamaObject_pull, METH_NOARGS,
-     "pull to Otama DataBase"},
+     "pull to Otama Database"},
+    {"create_database", (PyCFunction)OtamaObject_create_database, METH_NOARGS,
+     "create Otama Database Table"},
+    {"drop_database", (PyCFunction)OtamaObject_drop_database, METH_NOARGS,
+     "drop to Otama Database Table"},
     {"create_table", (PyCFunction)OtamaObject_create_table, METH_NOARGS,
-     "create Otama DataBase Table"},
+     "create Otama Database Table (deprecated)"},
     {"drop_table", (PyCFunction)OtamaObject_drop_table, METH_NOARGS,
-     "drop to Otama DataBase Table"},
+     "drop to Otama Database Table (deprecated)"},
+    {"drop_index", (PyCFunction)OtamaObject_drop_index, METH_NOARGS,
+     "drop to Otama Database Index"},
+    {"vacuum_index", (PyCFunction)OtamaObject_vacuum_index, METH_NOARGS,
+     "vacuum to Otama Database Index"},
     {"insert", (PyCFunction)OtamaObject_insert, METH_VARARGS,
      "insert image data"},
     {"remove", (PyCFunction)OtamaObject_remove, METH_VARARGS,
-     "remove id from Otama DataBase"},
+     "remove id from Otama Database"},
     {"search", (PyCFunction)OtamaObject_search, METH_VARARGS,
-     "search from Otama DataBase"},
+     "search from Otama Database"},
     {"similarity", (PyCFunction)OtamaObject_similarity, METH_VARARGS,
      "check similarity"},
     {"exists", (PyCFunction)OtamaObject_exists, METH_VARARGS,
-     "exist image in Otama DataBase"},
+     "exist image in Otama Database"},
     {"feature_string", (PyCFunction)OtamaObject_feature_string, METH_VARARGS,
      "return feature string value"},
     {"feature_raw", (PyCFunction)OtamaObject_feature_raw, METH_VARARGS,
      "return feature raw value"},
+    {"invoke", (PyCFunction)OtamaObject_invoke, METH_VARARGS,
+     "invoke Database driver"},
     {NULL, NULL, 0, NULL}
 };
 

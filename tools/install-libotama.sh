@@ -20,7 +20,8 @@ cd nv
 cd $WORKDIR
 git clone https://github.com/nagadomi/otama.git
 cd otama
-./configure --enable-pgsql --enable-mysql
-make && make check && sudo make install && sudo ldconfig
+./autogen.sh
+./configure --enable-pgsql --enable-mysql --disable-leveldb --without-ruby
+make && sudo make install && sudo ldconfig
 
 rm -rf $WORKDIR

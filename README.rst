@@ -1,6 +1,10 @@
 otamapy
 =======
 
+.. image:: https://travis-ci.org/hhatto/otamapy.png?branch=master
+    :target: https://travis-ci.org/hhatto/otamapy
+    :alt: Build status
+
 About
 -----
 otamapy is Python Interface for otama_ (otama is CBIR.).
