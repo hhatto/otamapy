@@ -7,9 +7,10 @@ import os
 
 include_dirs = [get_python_inc()]
 library_dirs = ['/usr/local/lib']
+exec(open('otamapy/_version.py').read())
 
 setup(name='otamapy',
-      version="0.2",
+      version=__version__,
       description="otamapy is Python Interface for otama.",
       long_description=open('README.rst').read(),
       author='Hideo Hattori',
