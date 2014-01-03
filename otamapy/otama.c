@@ -95,6 +95,7 @@ variant2pyobj(otama_variant_t *var)
             return dict;
         }
         case OTAMA_VARIANT_TYPE_NULL:
+            Py_RETURN_NONE;
         default:
             printf("not implementation\n");
             break;
