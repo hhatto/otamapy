@@ -23,6 +23,7 @@ INVOKE_CONFIG = {
     'database': {'driver': 'sqlite3',
                  'name': os.path.join(DATA_DIR, 'store.db')}}
 
+
 class TestOtama(unittest.TestCase):
 
     def setUp(self):
