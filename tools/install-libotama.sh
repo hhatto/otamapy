@@ -22,6 +22,6 @@ git clone https://github.com/nagadomi/otama.git
 cd otama
 ./autogen.sh
 ./configure --enable-pgsql --enable-mysql --disable-leveldb --without-ruby
-make && make check && sudo make install && sudo ldconfig
+make && sudo make install && sudo ldconfig
 
 rm -rf $WORKDIR
