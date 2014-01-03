@@ -1,3 +1,4 @@
+=======
 otamapy
 =======
 
@@ -6,7 +7,7 @@ otamapy
     :alt: Build status
 
 About
------
+=====
 otamapy is Python Interface for otama_ (otama is CBIR.).
 
 .. _otama: https://github.com/nagadomi/otama
@@ -15,7 +16,7 @@ otamapy is Python Interface for otama_ (otama is CBIR.).
 
 
 Installation
-------------
+============
 from pip::
 
     $ pip install --upgrade otamapy
@@ -26,12 +27,24 @@ from easy_install::
 
 
 Requirements
-------------
-* Python2.7+ and Python3.3+
+============
+* Python2.6+ and Python3.2+
 * otama library (otama_, nv_, eiio_)
 
+Installation otama
+------------------
+
+on MacOSX::
+
+    $ sh tools/install-libotama-for-macosx.sh
+
+on Linux::
+
+    $ sh tools/install-libotama.sh
+
+
 Usage
------
+=====
 
 config file (example.conf)
 
@@ -71,10 +84,12 @@ see examples_ .
 .. _examples: https://github.com/hhatto/otamapy/tree/master/examples
 
 Links
------
+=====
 * PyPI_
 * GitHub_
+* `Travis CI`_
 
 .. _PyPI: http://pypi.python.org/pypi/otamapy/
 .. _GitHub: https://github.com/hhatto/otamapy
+.. _`Travis CI`: https://travis-ci.org/hhatto/otamapy
 
