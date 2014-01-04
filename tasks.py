@@ -4,22 +4,28 @@ from invoke import run, task
 
 
 @task
-def all():
+def build():
     """building a otamapy module"""
     run('python setup.py build')
 
 
 @task
+def install():
+    """install otamapy"""
+    run('pip install --upgrade .')
+
+
+@task
 def test():
     """run unittest"""
-    run('nosetests')
+    run('nosetests -w test')
 
 
 @task
 def example():
     """run example code"""
     clean()
-    run('pip install --upgrade .')
+    install()
     os.chdir('examples')
     run('python store.py')
     run('python search.py')
