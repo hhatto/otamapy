@@ -5,6 +5,7 @@ try:
     from StringIO import StringIO
 except:
     from io import StringIO
+import otama
 from otama import Otama
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -55,6 +56,9 @@ class TestOtama(unittest.TestCase):
 
     def test_vacuum_index(self):
         self.assertEqual(None, self.db.vacuum_index())
+
+    def test_has_libotama_version_string(self):
+        self.assertEqual(str, type(otama.__libotama_version__))
 
 
 class TestOtamaWithLevelDB(unittest.TestCase):
