@@ -7,7 +7,7 @@ import os
 
 include_dirs = [get_python_inc()]
 library_dirs = ['/usr/local/lib']
-exec(open('otamapy/_version.py').read())
+exec(open('otama/_version.py').read())
 
 setup(name='otamapy',
       version=__version__,
@@ -18,10 +18,10 @@ setup(name='otamapy',
       url='https://github.com/hhatto/otamapy',
       license='GPLv3',
       platforms='Linux',
-      packages=['otamapy'],
+      packages=['otama'],
       ext_modules=[
-          Extension('otama',
-                    sources=['./otamapy/otama.c'],
+          Extension('otama.otama',
+                    sources=['./otama/otama.c'],
                     include_dirs=include_dirs,
                     library_dirs=library_dirs,
                     libraries=['otama'],
