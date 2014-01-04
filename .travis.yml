@@ -8,12 +8,12 @@ python:
     - "3.3"
 
 install:
-    - pip install invoke
+    - pip install invoke nose
     - inv install_libotama
     - python setup.py --quiet build --build-base=".build-$TRAVIS_PYTHON_VERSION" install
 
 script:
-    - python test/test_otama.py
+    - nosetests -w test
 
 after_success:
     # pypy is too slow.
