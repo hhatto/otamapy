@@ -69,7 +69,7 @@ store to database, and search from database.
     for filename in ('foo.jpg', 'bar.jpg'):
         kvs[db.insert(filename)] = filename
 
-    for result in db.search(10, 'foo.jpg')
+    for result in db.search(10, 'foo.jpg'):
         key = result['id']
         print("sim=%.3f, file=%s" % (result['similarity'], kvs[key]))
 
