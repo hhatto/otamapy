@@ -681,10 +681,19 @@ OtamaObject_exists(OtamaObject *self, PyObject *args)
 #ifdef PY3
     PyObject *utf8_item;
     utf8_item = PyUnicode_AsUTF8String(id);
+    if (!hexstr) {
+        PyErr_SetString(PyExc_TypeError, "argument error");
+        return NULL;
+    }
     ret = otama_id_hexstr2bin(&otama_id, PyBytes_AsString(utf8_item));
     Py_XDECREF(utf8_item);
 #else
-    ret = otama_id_hexstr2bin(&otama_id, PyString_AsString(id));
+    char *hexstr = PyString_AsString(id);
+    if (!hexstr) {
+        PyErr_SetString(PyExc_TypeError, "argument error");
+        return NULL;
+    }
+    ret = otama_id_hexstr2bin(&otama_id, hexstr);
 #endif
     if (ret != OTAMA_STATUS_OK) {
         otamapy_raise(ret);
