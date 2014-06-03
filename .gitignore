@@ -5,3 +5,4 @@ examples/data
 __pycache__
 dist
 *.pyc
+.idea
