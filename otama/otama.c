@@ -681,7 +681,7 @@ OtamaObject_exists(OtamaObject *self, PyObject *args)
 #ifdef PY3
     PyObject *utf8_item;
     utf8_item = PyUnicode_AsUTF8String(id);
-    if (!hexstr) {
+    if (!utf8_item) {
         PyErr_SetString(PyExc_TypeError, "argument error");
         return NULL;
     }
