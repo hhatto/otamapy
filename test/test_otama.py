@@ -3,7 +3,7 @@ import shutil
 import unittest
 try:
     from StringIO import StringIO
-except:
+except ImportError:
     from io import StringIO
 import otama
 from otama import Otama
