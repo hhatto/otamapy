@@ -179,6 +179,14 @@ pyobj2variant(PyObject *object, otama_variant_t *var)
             pyobj2variant(elm, otama_variant_array_at(var, i));
         }
     }
+    else if (PyList_Check(object)) {
+        int len = PyList_Size(object), i;
+        otama_variant_set_array(var);
+        for (i = 0; i < len; ++i) {
+            PyObject *elm = PyList_GetItem(object, i);
+            pyobj2variant(elm, otama_variant_array_at(var, i));
+        }
+    }
     else if (PyDict_Check(object)) {
         otama_variant_set_hash(var);
         PyObject *key, *value;
