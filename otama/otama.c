@@ -153,7 +153,7 @@ pyobj2variant(PyObject *object, otama_variant_t *var)
         utf8_item = PyUnicode_AsUTF8String(object);
         if (!utf8_item) {
             PyErr_SetString(PyExc_OtamaError, "don't gen utf8 item");
-            return NULL;
+            return (void)NULL;
         }
 
         if (strlen(PyBytes_AsString(utf8_item)) == PyUnicode_GET_SIZE(object)) {
