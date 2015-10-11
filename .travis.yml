@@ -9,9 +9,28 @@ python:
     - "3.4"
     - "3.5"
 
-install:
+addons:
+    apt:
+        packages:
+            - gcc
+            - g++
+            - make
+            - autoconf
+            - libtool
+            - libpng-dev
+            - libjpeg-dev
+            - libgif-dev
+            - libssl-dev
+            - libyaml-dev
+            - libsqlite3-dev
+            - libpq-dev
+            - libmysqlclient-dev
+
+before_install:
     - pip install invoke nose
     - inv install_libotama
+
+install:
     - python setup.py --quiet build --build-base=".build-$TRAVIS_PYTHON_VERSION" install
 
 script:
