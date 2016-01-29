@@ -65,7 +65,7 @@ store to database, and search from database.
     db = Otama.open('example.conf')
 
     kvs = {}
-    db.create_table()
+    db.create_database()
     for filename in ('foo.jpg', 'bar.jpg'):
         kvs[db.insert(filename)] = filename
 

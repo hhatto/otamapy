@@ -18,7 +18,7 @@ if not os.path.exists(DATA_DIR):
     os.mkdir(DATA_DIR)
 
 db = Otama.open(config)
-db.create_table()
+db.create_database()
 files = glob(os.path.join(IMAGE_DIR, '*.jpg'))
 files += glob(os.path.join(IMAGE_DIR, '*.png'))
 kvs = {}
