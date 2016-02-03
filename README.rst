@@ -34,13 +34,18 @@ Requirements
 Installation otama
 ------------------
 
-on MacOSX::
+on MacOSX (via homebrew-tap)::
 
-    $ sh tools/install-libotama-for-macosx.sh
+    $ brew tap hhatto/otama
+    $ brew install otama
 
 on Linux::
 
     $ sh tools/install-libotama.sh
+
+on MacOSX (from source)::
+
+    $ sh tools/install-libotama-for-macosx.sh
 
 
 Usage
