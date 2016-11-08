@@ -4,25 +4,25 @@ from invoke import run, task
 
 
 @task
-def build():
+def build(ctx):
     """building a otamapy module"""
     run('python setup.py build')
 
 
 @task
-def install():
+def install(ctx):
     """install otamapy"""
     run('pip install --upgrade .')
 
 
 @task
-def test():
+def test(ctx):
     """run unittest"""
     run('nosetests -w test')
 
 
 @task
-def example():
+def example(ctx):
     """run example code"""
     clean()
     install()
@@ -33,14 +33,14 @@ def example():
 
 
 @task
-def pypireg():
+def pypireg(ctx):
     """regster to PyPI"""
     run('python setup.py register')
     run('python setup.py sdist upload')
 
 
 @task
-def install_libotama():
+def install_libotama(ctx):
     """install to libotama"""
     if sys.platform == 'darwin':
         run('sh tools/install-libotama-for-macosx.sh')
@@ -49,7 +49,7 @@ def install_libotama():
 
 
 @task
-def clean():
+def clean(ctx):
     """clean development environment"""
     run('rm -rf build dist *.egg-info temp setup.cfg')
     run('rm -f */*.pyc *.pyc')
