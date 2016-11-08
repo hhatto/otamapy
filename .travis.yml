@@ -2,11 +2,10 @@ language: python
 
 python:
     - "2.7"
-    - "pypy"
-    - "3.2"
-    - "3.3"
     - "3.4"
     - "3.5"
+    - "pypy"
+    - "pypy3"
 
 addons:
     apt:
@@ -37,4 +36,4 @@ script:
 
 after_success:
     # pypy is too slow.
-    - if [ "$TRAVIS_PYTHON_VERSION" != "pypy" ]; then ./coveralls.bash; fi
+    - if [[ "$TRAVIS_PYTHON_VERSION" != "pypy"* ]]; then ./coveralls.bash; fi
