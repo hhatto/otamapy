@@ -18,7 +18,7 @@ cd $WORKDIR
 git clone https://github.com/nagadomi/otama.git
 cd otama
 ./autogen.sh
-./configure --disable-openmp --disable-leveldb --without-ruby
+./configure --disable-openssl --disable-openmp --disable-leveldb --without-ruby
 make && make install
 
 rm -rf $WORKDIR
